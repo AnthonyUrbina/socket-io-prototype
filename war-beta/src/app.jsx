@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import React from 'react';
 import socketClient from 'socket.io-client';
 const server = 'http://192.168.1.89:3000/';
@@ -7,6 +6,7 @@ const socket = socketClient(server);
 export default class App extends React.Component {
   constructor(props) {
     super(props);
+    this.myref = React.createRef();
     this.state = {
       player1deck: this.props.cards.slice(5, 10),
       player2deck: this.props.cards.slice(0, 5),
@@ -15,16 +15,22 @@ export default class App extends React.Component {
       battlefield: []
     };
     this.handleClick = this.handleClick.bind(this);
+    this.battleWinner = this.battleWinner.bind(this);
   }
 
   componentDidMount() {
-    console.log('hi');
     socket.on('player 1 card flipped response', card => {
       this.setState({ player1play: card });
     });
     socket.on('player 2 card flipped response', card => {
       this.setState({ player2play: card });
     });
+  }
+
+  checkBattlefield() {
+    if (this.state.player1play && this.state.player2play) {
+      setTimeout(this.battleWinner, 1000);
+    }
   }
 
   handleClick(event, props) {
@@ -51,25 +57,21 @@ export default class App extends React.Component {
 
   battleWinner() {
     if (this.state.player1play && this.state.player2play) {
-      let winningCard = null;
       const battlefield = [this.state.player1play, this.state.player2play];
 
       let player1deckCopy = [...this.state.player1deck];
       let player2deckCopy = [...this.state.player2deck];
-      console.log('hi');
+
       if (this.state.player1play > this.state.player2play) {
-        winningCard = this.state.player1play;
         player1deckCopy = player1deckCopy.concat(battlefield);
-        console.log('player1', player1deckCopy);
         this.setState({ player1play: null, player2play: null, player1deck: player1deckCopy });
       } else {
-        winningCard = this.state.player2play;
         player2deckCopy = player2deckCopy.concat(battlefield);
-        console.log('player2', player2deckCopy);
         this.setState({ player1play: null, player2play: null, player2deck: player2deckCopy });
       }
-      return <p>{winningCard}</p>;
+      return <p>{this.checkBattlefield()}</p>;
     }
+
   }
 
   render() {
@@ -78,14 +80,17 @@ export default class App extends React.Component {
         <div>
           player 1
           <button data-view="player1" onClick={this.handleClick}>flip card</button>
+          <p className='deck'> deck: {this.state.player1deck}</p>
+
           <p>{this.showCardP1()}</p>
         </div>
         <div>
           player 2
           <button data-view="player2" onClick={this.handleClick}>flip card</button>
+          <p className='deck'> deck: {this.state.player2deck}</p>
           <p>{this.showCardP2()}</p>
         </div>
-        {this.battleWinner()}
+        {this.checkBattlefield()}
       </>
     );
   }
