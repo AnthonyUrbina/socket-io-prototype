@@ -85,6 +85,7 @@ export default class App extends React.Component {
           <button data-view="player2" onClick={this.handleClick}>flip card</button>
           <p>{this.showCardP2()}</p>
         </div>
+        {this.battleWinner()}
       </>
     );
   }
